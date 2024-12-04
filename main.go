@@ -1,18 +1,36 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"errors"
+	"os"
+	"strings"
+
+	"example.kyg/notes/note"
 )
 
 func main() {
 	
 	title, content, err := getNote()
 	if err != nil {
-		return
+		fmt.Print("\n", err, "\n")
+		return 
 	}
 
-	fmt.Println("You entereted the title", title, "\nYou entered the content", content)
+	userNote, err := note.New(title,content)
+	if err != nil {
+		fmt.Print("\n", err, "\n")
+		return 
+	}
+
+	userNote.Display()
+	err = userNote.Save()
+
+	if err != nil {
+		fmt.Println("Saving failed")
+		return
+	}
+	fmt.Println("Saving succeeded")
 }
 func getNote() (string, string, error) {
 	title, errTitle := getInput("Note title: ")
@@ -29,13 +47,19 @@ func getNote() (string, string, error) {
 	return title, content, nil
 }
 
+// handling long user input text
 func getInput(prompt string) (string, error) {
-	var input string
+	
 	fmt.Print(prompt)
-	fmt.Scanln(&input)
+	reader := bufio.NewReader(os.Stdin)
+	text, err := reader.ReadString('\n') // single quotes for single character
 
-	if input == "" {
-		return "", errors.New("invalid input")
+	if err != nil {
+		return "", err
 	}
-	return input, nil
+
+	text = strings.TrimSuffix(text, "\n")
+	text = strings.TrimSuffix(text, "\r")
+
+	return text, nil
 }
